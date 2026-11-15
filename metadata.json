@@ -1,0 +1,8 @@
+{
+  "name": "AstroCare",
+  "description": "Astronaut Health Monitoring \u0026 Early Warning Platform — Human Health. Beyond Earth.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

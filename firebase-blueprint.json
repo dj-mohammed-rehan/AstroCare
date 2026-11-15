@@ -1,0 +1,133 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "Astronaut Profile",
+      "description": "Verified astronaut identification and biomedical baseline stored per Firebase Auth UID.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Authentication user UID",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified astronaut email address",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Astronaut full name",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "callsign": {
+          "type": "string",
+          "description": "Mission callsign or crew identifier",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "role": {
+          "type": "string",
+          "description": "Assigned crew role",
+          "enum": [
+            "Mission Commander",
+            "Flight Engineer",
+            "Payload Specialist",
+            "Flight Surgeon",
+            "Science Officer"
+          ]
+        },
+        "missionName": {
+          "type": "string",
+          "description": "Active mission name",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "spacecraft": {
+          "type": "string",
+          "description": "Assigned spacecraft or habitat",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "age": {
+          "type": "number",
+          "description": "Astronaut age in years (21-75)"
+        },
+        "sex": {
+          "type": "string",
+          "description": "Biological sex",
+          "enum": ["Female", "Male", "Other", "Prefer not to say"]
+        },
+        "bloodGroup": {
+          "type": "string",
+          "description": "ABO/Rh blood group",
+          "enum": ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]
+        },
+        "heightCm": {
+          "type": "number",
+          "description": "Height in centimeters (140-215)"
+        },
+        "weightKg": {
+          "type": "number",
+          "description": "Weight in kilograms (40-130)"
+        },
+        "restingHeartRate": {
+          "type": "number",
+          "description": "Baseline resting heart rate in BPM (40-110)"
+        },
+        "medicalNotes": {
+          "type": "string",
+          "description": "Optional biomedical notes and allergies",
+          "maxLength": 1000
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "Profile avatar asset path or compact JPEG data URL",
+          "maxLength": 120000
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": [
+        "uid",
+        "email",
+        "fullName",
+        "callsign",
+        "role",
+        "missionName",
+        "spacecraft",
+        "age",
+        "sex",
+        "bloodGroup",
+        "heightCm",
+        "weightKg",
+        "restingHeartRate",
+        "medicalNotes",
+        "avatarUrl",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Private astronaut profile document strictly readable and writable only by the verified owner (request.auth.uid == userId && email_verified == true)."
+    }
+  }
+}

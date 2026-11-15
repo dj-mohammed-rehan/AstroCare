@@ -1,0 +1,168 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global safety net: deny all reads and writes unless explicitly matched below.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedOwner(userId) {
+      return isSignedIn()
+        && request.auth.uid == userId
+        && request.auth.token.email_verified == true;
+    }
+
+    function isValidRole(role) {
+      return role in [
+        'Mission Commander',
+        'Flight Engineer',
+        'Payload Specialist',
+        'Flight Surgeon',
+        'Science Officer'
+      ];
+    }
+
+    function isValidSex(sex) {
+      return sex in ['Female', 'Male', 'Other', 'Prefer not to say'];
+    }
+
+    function isValidBloodGroup(bloodGroup) {
+      return bloodGroup in ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'];
+    }
+
+    function isValidUserProfile(data) {
+      return data.keys().hasAll([
+          'uid',
+          'email',
+          'fullName',
+          'callsign',
+          'role',
+          'missionName',
+          'spacecraft',
+          'age',
+          'sex',
+          'bloodGroup',
+          'heightCm',
+          'weightKg',
+          'restingHeartRate',
+          'medicalNotes',
+          'avatarUrl',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'uid',
+          'email',
+          'fullName',
+          'callsign',
+          'role',
+          'missionName',
+          'spacecraft',
+          'age',
+          'sex',
+          'bloodGroup',
+          'heightCm',
+          'weightKg',
+          'restingHeartRate',
+          'medicalNotes',
+          'avatarUrl',
+          'createdAt',
+          'updatedAt'
+        ])
+        && isValidId(data.uid)
+        && data.uid == request.auth.uid
+        && data.email is string
+        && data.email.size() >= 3
+        && data.email.size() <= 254
+        && request.auth.token.email is string
+        && data.email == request.auth.token.email
+        && data.fullName is string
+        && data.fullName.size() >= 1
+        && data.fullName.size() <= 120
+        && data.callsign is string
+        && data.callsign.size() >= 1
+        && data.callsign.size() <= 32
+        && data.role is string
+        && isValidRole(data.role)
+        && data.missionName is string
+        && data.missionName.size() >= 1
+        && data.missionName.size() <= 100
+        && data.spacecraft is string
+        && data.spacecraft.size() >= 1
+        && data.spacecraft.size() <= 120
+        && data.age is number
+        && data.age >= 21
+        && data.age <= 75
+        && data.sex is string
+        && isValidSex(data.sex)
+        && data.bloodGroup is string
+        && isValidBloodGroup(data.bloodGroup)
+        && data.heightCm is number
+        && data.heightCm >= 140
+        && data.heightCm <= 215
+        && data.weightKg is number
+        && data.weightKg >= 40
+        && data.weightKg <= 130
+        && data.restingHeartRate is number
+        && data.restingHeartRate >= 40
+        && data.restingHeartRate <= 110
+        && data.medicalNotes is string
+        && data.medicalNotes.size() <= 1000
+        && data.avatarUrl is string
+        && data.avatarUrl.size() <= 120000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isVerifiedOwner(userId);
+      allow list: if false;
+      allow create: if isValidId(userId)
+        && isVerifiedOwner(userId)
+        && isValidUserProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(userId)
+        && isVerifiedOwner(userId)
+        && isValidUserProfile(incoming())
+        && incoming().uid == existing().uid
+        && incoming().email == existing().email
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'fullName',
+          'callsign',
+          'role',
+          'missionName',
+          'spacecraft',
+          'age',
+          'sex',
+          'bloodGroup',
+          'heightCm',
+          'weightKg',
+          'restingHeartRate',
+          'medicalNotes',
+          'avatarUrl',
+          'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+  }
+}
